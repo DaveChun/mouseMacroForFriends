@@ -1,0 +1,82 @@
+import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseListener;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+
+public class mouseMacro{
+	static int moveRange = 1; //mouse move range
+	static int timePeriod = 240; //moving time period(sec)
+	static int endHour = 20; //end hour of today
+	static int lunch = 12; //lunch time
+
+	public void mouseMoveMacro(int x, int y){
+		try{
+			Robot robot = new Robot();
+			robot.mouseMove(x,y);
+		} catch(AWTException e){
+			e.printStackTrace();
+		}
+	}
+	
+	public void mouseSet(int x, int y){
+		mouseMacro m = new mouseMacro ();
+		PointerInfo pi = MouseInfo.getPointerInfo();
+		Point p = pi.getLocation();
+		m.mouseMoveMacro((int)p.getX()+x, (int)p.getY()+y);
+	}
+
+	public String getTime(){
+		LocalDateTime ldt = LocalDateTime.now();
+		String now = ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
+		return now;
+	}	
+	
+	public boolean checkEndTime(){
+		boolean endFlg = false;
+		LocalTime now = LocalTime.now();
+		int nowHour = now.getHour();
+		if (nowHour >= endHour){
+			endFlg = true;
+		}
+		return endFlg;
+	}
+	
+	public boolean checkLunchTime(){
+		boolean restFlg = false;
+		LocalTime now = LocalTime.now();
+		int nowHour = now.getHour();
+		if (nowHour == lunch){
+			restFlg = true;
+		}
+		return restFlg;
+	}
+
+	public void scheduler(int x, int y){
+		mouseMacro m = new mouseMacro();
+		Timer t = new Timer();
+		TimerTask timerTask = new TimerTask(){
+			@Override
+			public void run(){
+				if(checkEndTime()){
+					System.out.println("End: " + m.getTime());
+				} else if(checkLunchTime()){
+					System.out.println("Lunch: " + m.getTime());
+				} else {
+					m.mouseSet(x, x);
+					m.mouseSet(-x, -x);
+					System.out.println("Running: " + m.getTime());
+				}
+			}
+		};
+		t.schedule(timerTask, 0, y * 1000);
+	}
+	
+	public static void main(String[] args){
+		mouseMacro m = new mouseMacro();
+		System.out.println("Start: " + m.getTime());
+		m.scheduler(moveRange, timePeriod);
+	}
+}
